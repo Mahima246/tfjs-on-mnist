@@ -1,0 +1,20 @@
+{
+  "name": "tensorflow",
+  "version": "1.0.0",
+  "description": "Server side for MNIST digit recognizer",
+  "main": "index.js",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4"
+  },
+  "devDependencies": {
+    "concurrently": "^4.1.0"
+  },
+  "scripts": {
+    "client": "cd client && npm start",
+    "server": "nodemon server.js",
+    "dev": "concurrently --kill-others-on-fail \"npm server\" \"npm client\""
+  },
+  "author": "Syd Strzempko",
+  "license": "ISC"
+}
