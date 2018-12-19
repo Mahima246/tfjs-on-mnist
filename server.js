@@ -43,12 +43,13 @@ async function prepTrains() {
     	const canvas = createCanvas(28*77,28*77);
 	const context = canvas.getContext('2d');
 	let imgs = [];
-	for (let i=0;i<10;i++) {
-		let path = 'http://localhost:5000/mnist'+i+'.jpg';
-		loadImage(path).then((img) => { if (sliceupImage(img,i)) return trains;})
-				.catch((err)=>{console.log("failed");});
-	}
-	
+	return new Promise(function(res,rej){
+		for (let i=0;i<10;i++) {
+			let path = 'http://localhost:5000/mnist'+i+'.jpg';
+			loadImage(path).then((img) => { if (sliceupImage(img,i)) res(trains);})
+					.catch((err)=>{console.log("failed");});
+		}
+	});
 	function sliceupImage(image,key){
         	let images = new Uint8Array(28*28*77*77);
         	let labels = new Uint8Array(10*77*77);
@@ -110,13 +111,34 @@ function loadCanvas(raw,compress) {
 
         return ret;
 }
-async function run(){
-	const empty = buildModel();
-	const traindata = await prepTrains();
-	console.log(traindata);
+
+async function trainModel(model,data){
+	return new Promise(function(res,rej){
+		for (let tensor in data){
+			console.log(tensor.xs);
+			console.log(tensor.ys);
+			let fpromise = model.fit(tensor.xs,tensor.ys);
+			fpromise.then(()=>{console.log("fitted");});
+		}
+		res(model);
+	});
 }
 
-run().then(()=>{console.log("final done")});
+async function run(){
+	return new Promise(function(res,rej){
+		const empty = buildModel();
+		let tpromise = prepTrains();
+		tpromise.then((ret)=>{
+			let mpromise = trainModel(empty,ret);
+			mpromise.then((model)=>{
+				res(model);
+			}).catch((err)=>{rej(err)});
+		}).catch((err)=>{rej(err)});
+	});
+}
+
+let rpromise = run();
+rpromise.then((model)=>{const modelx=model;});
 
 app.get('/model', (req, res) => {
   res.send({ express: 'Hello From Express' });
