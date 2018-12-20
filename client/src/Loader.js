@@ -8,7 +8,6 @@ export default class Loader extends React.Component {
 			this.state = {
 				loading_message: null,
 				ready_button: null,
-				tensors: null,
 			}
 		}
 

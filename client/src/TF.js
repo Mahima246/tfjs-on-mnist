@@ -25,6 +25,12 @@ export default class TF extends Component {
 		window.addEventListener('resize',this.resizectx);
 	}
 
+	componentDidUpdate(){
+		if (this.props.model==null) return;
+		if (this.props.model==this.state.model) return;
+		this.setState({model:this.props.model});
+	}
+
 	resizectx = () => {
 		let rect = this.ctx.current.getBoundingClientRect();
         this.setState({c_y0:rect.top,c_x0:rect.left});
@@ -62,10 +68,14 @@ export default class TF extends Component {
 		if (this.state.test.label==null) alert("Please type a valid digit");
 		const temp = loadCanvas(this.state.canvas.getImageData(0,0,280,280).data,true);
 		const tensors = convertToTensors(temp,this.state.test.label);
-		this.setState({train:tensors});
-		//runModelTrain(model,tensors.xs,tensors.ys,1).then(() => {
-		//	console.log("done");
-		//});
+	    // Compiles to test on the metrics that we want
+		this.state.model.compile({
+			optimizer: 'rmsprop',
+			loss: 'categoricalCrossentropy',
+			metrics: ['accuracy'],
+		});	
+		const testResult = this.state.model.evaluate(tensors.xs,tensors.ys,{batchsize:1});
+		console.log(testResult[1].dataSync()[0] * 100);
 	}
 
   render() {

@@ -7,7 +7,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const port = process.env.PORT || 5000;
-app.use(express.static('data'));
+app.use(express.static('./'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -40,20 +40,19 @@ function buildModel(){
 
 async function prepTrains() {
 	const trains = [];
-    	const canvas = createCanvas(28*77,28*77);
+    const canvas = createCanvas(28*77,28*77);
 	const context = canvas.getContext('2d');
 	let imgs = [];
 	return new Promise(function(res,rej){
 		for (let i=0;i<10;i++) {
-			let path = 'http://localhost:5000/mnist'+i+'.jpg';
+			let path = 'http://localhost:5000/data/mnist'+i+'.jpg';
 			loadImage(path).then((img) => { if (sliceupImage(img,i)) res(trains);})
 					.catch((err)=>{console.log("failed");});
 		}
 	});
 	function sliceupImage(image,key){
-        	let images = new Uint8Array(28*28*77*77);
-        	let labels = new Uint8Array(10*77*77);
-		console.log("drawimg");
+        let images = new Uint8Array(28*28*77*77);
+        let labels = new Uint8Array(10*77*77);
  		context.drawImage(image,0,0);
 		for(let y = 0; y < 77; ++y) {
                         for(let x = 0; x < 77; ++x) {
@@ -68,13 +67,12 @@ async function prepTrains() {
 		return trains.length==10? true : false;
 	}
 	function convertLabel(pos){
-		let raw = [0,0,0,0,0,0,0,0,0,0];
+			let raw = [0,0,0,0,0,0,0,0,0,0];
         	raw[pos] = 1;
         	return raw;
 	}
 	function convertToTensors(images,labels){
-		let total = images.length/(28*28);
-        	console.log(total);
+			let total = images.length/(28*28);
         	let xs = tf.tensor4d(images,[total,28,28,1]);
         	let ys = tf.tensor2d(labels,[total,10]);
         	return {xs,ys};
@@ -113,14 +111,19 @@ function loadCanvas(raw,compress) {
 }
 
 async function trainModel(model,data){
-	return new Promise(function(res,rej){
-		for (let tensor in data){
-			console.log(tensor.xs);
-			console.log(tensor.ys);
-			let fpromise = model.fit(tensor.xs,tensor.ys);
-			fpromise.then(()=>{console.log("fitted");});
+	return new Promise(async function(res,rej){
+		for (let tensor of data){
+			let fpromise = await trainHandler(model,tensor.xs,tensor.ys);
+			//fpromise.then(()=>{console.log("fitted");});
 		}
+		console.log("trained");
 		res(model);
+	});
+}
+async function trainHandler(model,xs,ys){
+	return new Promise(function(res,rej){
+		let tpromise = model.fit(xs,ys);
+		tpromise.then(()=>{res(model)});
 	});
 }
 
@@ -129,6 +132,8 @@ async function run(){
 		const empty = buildModel();
 		let tpromise = prepTrains();
 		tpromise.then((ret)=>{
+			console.log("ret is");
+			console.log(ret);
 			let mpromise = trainModel(empty,ret);
 			mpromise.then((model)=>{
 				res(model);
@@ -136,12 +141,15 @@ async function run(){
 		}).catch((err)=>{rej(err)});
 	});
 }
-
+/*
+var modelx = null;
 let rpromise = run();
-rpromise.then((model)=>{const modelx=model;});
-
-app.get('/model', (req, res) => {
-  res.send({ express: 'Hello From Express' });
+rpromise.then((model)=>{
+	model.save('file://./model');
+});
+*/
+app.post('/model', (req, res) => {
+  res.send({model:"hi"});
 });
 
 app.listen(port, () => console.log(`Listening on port ${port}`));

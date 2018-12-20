@@ -3,26 +3,27 @@ import { Switch, Route } from 'react-router-dom';
 import Loader from './Loader'
 import TF from './TF'
 import { createConvModel, runModelTrain } from './TFHelpers'
-
+import * as tf from '@tensorflow/tfjs';
 export default class App extends React.Component {
 	
 	constructor(){
 		super();
 		this.state = {
 			model: null,
-			train: null,
+			test: null,
 		}
 	}	
 
 	componentDidMount(){
-		console.log("App mounted");
 		// Prepare the model
-		let model = createConvModel();
-		this.setState({model:model});
+		this.requestModel().then((model)=>{
+			this.setState({model:model});
+		});
 	}
 
-	sendModel = (m) => {
-		this.setState({model:m});
+	requestModel = async () => {
+		let model = await tf.loadModel('http://localhost:3000/model/model.json');
+		return model;
 	}
 
 	render() {
