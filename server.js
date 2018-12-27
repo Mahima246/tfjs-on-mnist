@@ -146,6 +146,7 @@ var modelx = null;
 let rpromise = run();
 rpromise.then((model)=>{
 	model.save('file://./model');
+	console.log("DOne");
 });
 */
 app.post('/model', (req, res) => {

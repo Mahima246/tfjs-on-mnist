@@ -1,13 +1,12 @@
 import React, { Component } from 'react';
-import {generateTrainData,convertToTensors,convertLabel,loadCanvas,createConvModel,runModelTrain} from './TFHelpers'
+import {convertToTensors,convertLabel,loadCanvas} from './TFHelpers'
 
 export default class TF extends Component {
 
 	constructor(){
 		super();
 		this.state = {
-			train:null,
-			test:null,
+			label:null,
 			model:null,
 			canvas: null,
 			c_x0:null,
@@ -42,14 +41,12 @@ export default class TF extends Component {
 
 	clearCanvas = () => { this.state.canvas.clearRect(0, 0, 280,280); }
 
-	saveLabel = (e) => { 
-		let temp = {...this.state.test}
+	saveLabel = (e) => {
 		try { 
-			temp.label = convertLabel(e.target.value);
+			this.setState({label:convertLabel(e.target.value)});
 		} catch {
-			temp.label = null;
+			this.setState({label:null});
 		}
-		this.setState({test:temp});
 	}
 	
 	draw = (e) => {
@@ -65,9 +62,9 @@ export default class TF extends Component {
 	}
 	
 	submitData = () => {
-		if (this.state.test.label==null) alert("Please type a valid digit");
+		if (this.state.label==null) alert("Please type a valid digit");
 		const temp = loadCanvas(this.state.canvas.getImageData(0,0,280,280).data,true);
-		const tensors = convertToTensors(temp,this.state.test.label);
+		const tensors = convertToTensors(temp,this.state.label);
 	    // Compiles to test on the metrics that we want
 		this.state.model.compile({
 			optimizer: 'rmsprop',

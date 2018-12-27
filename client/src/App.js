@@ -22,15 +22,14 @@ export default class App extends React.Component {
 	}
 
 	requestModel = async () => {
-		let model = await tf.loadModel('http://localhost:3000/model/model.json');
+		let model = await tf.loadModel('http://localhost:3000/model/model.json','http://localhost:3000/model/weights.bin');
 		return model;
 	}
 
 	render() {
 		return (
 			<Switch>
-				<Route exact path='/' render={props => <Loader model={this.state.model} sendModel={this.sendModel} />} />
-				<Route exact path='/tf' render={props => <TF model={this.state.model} />} />
+				<Route exact path='/' render={props => <TF model={this.state.model} />} />
 			</Switch>
 		);
 	}
