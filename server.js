@@ -55,19 +55,24 @@ async function prepTrains() {
 		}
 	});
 	function sliceupImage(image,key){
-        let images = new Uint8Array(28*28*77*77);
-        let labels = new Uint8Array(10*77*77);
+        let images = []
+        let labels = []
+        //let images = new Uint8Array(28*28*77*77);
+        //let labels = new Uint8Array(10*77*77);
  		context.drawImage(image,0,0);
 		for(let y = 0; y < 77; ++y) {
                         for(let x = 0; x < 77; ++x) {
                                 let slice = loadCanvas(context.getImageData(x*28,y*28,28,28).data,false);
                                 //printslice(slice,key);
-                                let label = new Uint8Array(convertLabel(key));
-                                images.set(slice,28*28*(77*y+x));
-                                labels.set(label,10*(77*y+x));
+                                let label = convertLabel(key);
+                                images.push(slice);
+                                labels.push(label)
+                                //images.set(slice,28*28*(77*y+x));
+                                //labels.set(label,10*(77*y+x));
                         }
                 }
-		let tensors = convertToTensors(images,labels);
+        let tensors = {xs: images, ys: labels}
+		//let tensors = convertToTensors(images,labels);
 		trains.push(tensors);
 		return trains.length==10? true : false;
 	}
@@ -77,6 +82,28 @@ async function prepTrains() {
         	return raw;
 	}
 }
+
+async function shuffleTrains(sorted) {
+    let shuffled_set = [{xs:[],ys:[]},{xs:[],ys:[]},{xs:[],ys:[]},{xs:[],ys:[]},{xs:[],ys:[]},{xs:[],ys:[]},{xs:[],ys:[]}];
+    for(let i=0;i<(77*77);i++){
+        for (let j=0;j<10;j++){
+            try {
+                shuffled_set[i%7].xs.push(sorted[j].xs.pop())
+                shuffled_set[i%7].ys.push(sorted[j].ys.pop())
+            } catch(err) { console.log(err); }
+        }
+    }
+    for(let i=0;i<7;i++){
+        let images = new Uint8Array(10*28*28*77*77/7);
+        images.set(shuffled_set[i].xs.flat(),0);
+        let labels = new Uint8Array(10*10*77*77/7);
+        labels.set(shuffled_set[i].ys.flat(),0);
+        shuffled_set[i] = convertToTensors(images,labels);
+    }
+    console.log(shuffled_set[0]);
+    return shuffled_set;
+}
+
 function convertToTensors(images,labels){
 
         let total = images.length/(28*28);
@@ -93,8 +120,8 @@ function loadCanvas(raw,compress) {
         // 3; Cutoff of 30 on color -- gets best results
         let data3 = data2.map(x => x>30? 1 : 0);
         // 4; Converts to valid array for tensor
-        ret = Uint8Array.from(data3);
-        return ret;
+        //ret = Uint8Array.from(data3);
+        return data3;
 }
 
 function printslice(slice,i) {
@@ -130,19 +157,22 @@ async function run(){
 		const empty = buildModel();
 		let tpromise = prepTrains();
 		tpromise.then((ret)=>{
-			let mpromise = trainModel(empty,ret);
-			mpromise.then((model)=>{
-				res(model);
-			}).catch((err)=>{rej(err)});
+            let spromise = shuffleTrains(ret);
+            spromise.then((ret)=>{
+        		let mpromise = trainModel(empty,ret);
+        		mpromise.then((model)=>{
+        			res(model);
+        		}).catch((err)=>{rej(err)});
+            }).catch((err)=>{rej(err)});
 		}).catch((err)=>{rej(err)});
 	});
 }
 
-let rpromise = run();
-rpromise.then((model)=>{
-	model.save('file://./model');
-	console.log("Done");
-});
+// let rpromise = run();
+// rpromise.then((model)=>{
+// 	model.save('file://./model');
+// 	console.log("Done");
+// });
 
 async function loadModel(){
     return new Promise(async function(res,rej){
@@ -161,9 +191,8 @@ app.post('/model', (req, res) => {
         // model.predictOnBatch(test.xs).print().then(()=>{
         //     res.send({acc:"allset!"});
         // });
-        model.predict(test.xs).print().then(()=>{
-            res.send({acc:"allset!"});
-        })
+        let ret = Array.from(model.predict(test.xs).dataSync());
+        res.send({acc:ret});
 
     });
     
