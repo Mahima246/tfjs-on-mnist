@@ -7,7 +7,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const port = process.env.PORT || 5000;
-app.use(express.static('./'));
+app.use(express.static(__dirname));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -46,8 +46,12 @@ async function prepTrains() {
 	return new Promise(function(res,rej){
 		for (let i=0;i<10;i++) {
 			let path = 'http://localhost:5000/data/mnist'+i+'.jpg';
-			loadImage(path).then((img) => { if (sliceupImage(img,i)) res(trains);})
-					.catch((err)=>{console.log("failed");});
+            //let path = '/data/mnist'+i+'.jpg';
+			loadImage(path).then((img) => {
+                //console.log("worked")
+                if (sliceupImage(img,i)) res(trains);
+            })
+				.catch((err)=>{console.log(err);});
 		}
 	});
 	function sliceupImage(image,key){
@@ -57,6 +61,7 @@ async function prepTrains() {
 		for(let y = 0; y < 77; ++y) {
                         for(let x = 0; x < 77; ++x) {
                                 let slice = loadCanvas(context.getImageData(x*28,y*28,28,28).data,false);
+                                //printslice(slice,key);
                                 let label = new Uint8Array(convertLabel(key));
                                 images.set(slice,28*28*(77*y+x));
                                 labels.set(label,10*(77*y+x));
@@ -71,43 +76,36 @@ async function prepTrains() {
         	raw[pos] = 1;
         	return raw;
 	}
-	function convertToTensors(images,labels){
-			let total = images.length/(28*28);
-        	let xs = tf.tensor4d(images,[total,28,28,1]);
-        	let ys = tf.tensor2d(labels,[total,10]);
-        	return {xs,ys};
-	}
 }
+function convertToTensors(images,labels){
+
+        let total = images.length/(28*28);
+        let xs = tf.tensor4d(images,[total,28,28,1]);
+        let ys = tf.tensor2d(labels,[total,10]);
+        return {xs,ys};
+}
+
 function loadCanvas(raw,compress) {
         // 1; Converts typed array to regular array -- courtesy https://stackoverflow.com/a/29862266/10571336
         let data1 = Array.prototype.slice.call(raw);
         // 2; Converts the image to single-value number per pixel (assumption: r,g,b,a are all EQ) -- courtesy https://stackoverflow.com/a/33483070/10571336
-        let data2 = data1.filter(function(val,i,Arr) { return i % 4 == 0; })
-        // 3; Converts 256/0 to 1/0
-        let data3 = data2.map(x => x==0? x : 1);
-        // 4; Takes 10x10 chunks of the corresponding image, adds them up, then decides if compressed result is 1/0
-        let ret = [];
-        if (compress) {
-                let rows = [];
-                while (data3.length>0) { rows.push(data3.splice(0,280)); }
-                while (rows.length>0) {
-                  let strip = rows.splice(0,10);
-                  let chunks = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-                  for (let j=0;j<10;j++) {
-                        for (let i=0;i<28;i++) {
-                          let seg = strip[j].splice(0,10);
-                          let sum = seg.reduce((a,b)=>a+b,0);
-                          chunks[i] += sum;
-                        }
-                  }
-                  chunks = chunks.map(x => x>=50? 1:0);
-                  ret = ret.concat(chunks);
-                }
-        } else { ret = data3 };
-        // 5; Converts to valid array for tensor
-        ret = Uint8Array.from(ret);
-
+        let data2 = data1.filter(function(val,i,Arr) { return i % 4 == 1; })
+        // 3; Cutoff of 30 on color -- gets best results
+        let data3 = data2.map(x => x>30? 1 : 0);
+        // 4; Converts to valid array for tensor
+        ret = Uint8Array.from(data3);
         return ret;
+}
+
+function printslice(slice,i) {
+    let temp = slice;
+    //let temp = Array.from(slice)
+    for (let y=0;y<28;y++){
+        let row = temp.slice(0,28);
+        console.log(row.join(""));
+        temp = temp.slice(28);
+    }
+    console.log("------------------------"+"=="+i)
 }
 
 async function trainModel(model,data){
@@ -132,8 +130,6 @@ async function run(){
 		const empty = buildModel();
 		let tpromise = prepTrains();
 		tpromise.then((ret)=>{
-			console.log("ret is");
-			console.log(ret);
 			let mpromise = trainModel(empty,ret);
 			mpromise.then((model)=>{
 				res(model);
@@ -141,16 +137,40 @@ async function run(){
 		}).catch((err)=>{rej(err)});
 	});
 }
-/*
-var modelx = null;
+
 let rpromise = run();
 rpromise.then((model)=>{
 	model.save('file://./model');
-	console.log("DOne");
+	console.log("Done");
 });
-*/
+
+async function loadModel(){
+    return new Promise(async function(res,rej){
+        let newmodel = await tf.loadModel('file://./model/model.json','file://./model/weights.bin')
+        res(newmodel);
+    })
+}
+ 
 app.post('/model', (req, res) => {
-  res.send({model:"hi"});
+    
+    // try loading here
+    let mpromise = loadModel();
+    mpromise.then((model)=>{
+        let temp = Uint8Array.from(req.body.xs);
+        let test = convertToTensors(temp,[0,0,0,0,0,0,0,0,1,0]);
+        // model.predictOnBatch(test.xs).print().then(()=>{
+        //     res.send({acc:"allset!"});
+        // });
+        model.predict(test.xs).print().then(()=>{
+            res.send({acc:"allset!"});
+        })
+
+    });
+    
+    // try PREDICT .print()
+    //let testres = modelx.evaluate(req.xs,req.ys);
+    //let accpercent = testres[1].dataSync()[0]*100;
+
 });
 
 app.listen(port, () => console.log(`Listening on port ${port}`));

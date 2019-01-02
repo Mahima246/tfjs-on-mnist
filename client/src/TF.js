@@ -64,15 +64,23 @@ export default class TF extends Component {
 	submitData = () => {
 		if (this.state.label==null) alert("Please type a valid digit");
 		const temp = loadCanvas(this.state.canvas.getImageData(0,0,280,280).data,true);
-		const tensors = convertToTensors(temp,this.state.label);
-	    // Compiles to test on the metrics that we want
-		this.state.model.compile({
-			optimizer: 'rmsprop',
-			loss: 'categoricalCrossentropy',
-			metrics: ['accuracy'],
-		});	
-		const testResult = this.state.model.evaluate(tensors.xs,tensors.ys,{batchsize:1});
-		console.log(testResult[1].dataSync()[0] * 100);
+		//const tensors = convertToTensors(temp,this.state.label);
+	    // todo - set a request here to our express app
+	    this.requestModel(temp).then((res)=>{
+	    	console.log(res);
+	    });
+	}
+
+	requestModel = async (req) => {
+		const response = await fetch('/model', {
+			method: 'POST',
+			headers: {
+		        'Content-Type': 'application/json',
+		    },
+			body: JSON.stringify({ xs: req })
+			});
+		const body = await response.text();
+		return body;
 	}
 
   render() {

@@ -1,8 +1,6 @@
 import React from 'react';
 import { Switch, Route } from 'react-router-dom';
-import Loader from './Loader'
 import TF from './TF'
-import { createConvModel, runModelTrain } from './TFHelpers'
 import * as tf from '@tensorflow/tfjs';
 export default class App extends React.Component {
 	
