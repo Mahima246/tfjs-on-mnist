@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {convertToTensors,convertLabel,loadCanvas} from './TFHelpers'
+import {convertLabel,loadCanvas} from './TFHelpers'
 
 export default class TF extends Component {
 
@@ -63,9 +63,7 @@ export default class TF extends Component {
 	
 	submitData = () => {
 		if (this.state.label==null) alert("Please type a valid digit");
-		const temp = loadCanvas(this.state.canvas.getImageData(0,0,280,280).data,true);
-		//const tensors = convertToTensors(temp,this.state.label);
-	    // todo - set a request here to our express app
+		const temp = loadCanvas(this.state.canvas.getImageData(0,0,280,280).data);
 	    this.requestModel(temp).then((res)=>{
 	    	console.log(res);
 	    });
@@ -86,6 +84,11 @@ export default class TF extends Component {
   render() {
     return (
 		<div className='container elegant-color-dark'>
+			<div className="row">
+				<div className="col text-center">
+					<h1>Digit Predictor</h1>
+				</div>
+			</div>
 			<div className="row">
 				<div className="col text-center">				
 					<canvas 
