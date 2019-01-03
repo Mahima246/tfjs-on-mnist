@@ -8,6 +8,7 @@
     "@tensorflow/tfjs-node": "^0.2.1",
     "body-parser": "^1.18.3",
     "canvas": "^2.1.0",
+    "chart.js": "^1.1.1",
     "express": "^4.16.4",
     "file-system": "^2.2.2"
   },

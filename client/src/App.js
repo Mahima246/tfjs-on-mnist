@@ -1,11 +1,12 @@
 import React from 'react';
-import { Switch, Route } from 'react-router-dom';
-import * as tf from '@tensorflow/tfjs';
+import Modal from './Modal'
 import {convertLabel,loadCanvas} from './TFHelpers'
 export default class App extends React.Component {
 	constructor(){
 		super();
 		this.state = {
+			pred:[],
+			modal:false,
 			canvas: null,
 			c_x0:null,
 			c_y0:null,
@@ -50,8 +51,10 @@ export default class App extends React.Component {
 	    this.requestModel(temp).then((res)=>{
 	    	//let pred = Object.assign({}, JSON.parse(res)["acc"]);
 	    	let arr = JSON.parse(res)["acc"];
-	    	let max = arr.indexOf(arr.reduce((a, b) =>{ return Math.max(a, b) }))
-	    	alert("Your number is probably "+max);
+	    	let ranked = arr.map((percent,index)=>{return {"label":index,"value":percent*100}}).sort((a,b)=>{return b.value-a.value;});
+	    	//alert("Your number is probably "+ranked[0].key);
+	    	this.toggleModal();
+	    	this.setState({pred:ranked});
 	    });
 	}
 
@@ -67,37 +70,43 @@ export default class App extends React.Component {
 		return body;
 	}
 
-  render() {
+	toggleModal = () => {
+		this.state.modal? this.setState({modal:false}) : this.setState({modal:true})
+	}
+
+    render() {
     return (
-		<div id='main' className='container'>
-			<div className="row">
-				<div className="col">
-					<h2>Digit Predictor</h2>
+    	<React.Fragment>
+			<div id='main' className='container'>
+				<div className="row">
+					<div className="col">
+						<h2>Digit Predictor</h2>
+					</div>
+				</div>
+				<div className="row">
+					<div className="col text-center">				
+						<canvas 
+							id="drawable"
+							width={280} height={280} 
+							ref={this.ctx} 
+							onMouseMove={this.draw}
+							onMouseDown={this.setPosition}
+							onMouseEnter={this.setPosition}
+						></canvas>
+					</div>
+				</div>
+				<div className="row">
+					<div className="col text-center">
+						<button onClick={this.clearCanvas}>Clear</button>
+						<button onClick={this.submitData}>Submit</button>
+					</div>
+				</div>
+				<div className="row">
 				</div>
 			</div>
-			<div className="row">
-				<div className="col text-center">				
-					<canvas 
-						id="drawable"
-						width={280} height={280} 
-						ref={this.ctx} 
-						onMouseMove={this.draw}
-						onMouseDown={this.setPosition}
-						onMouseEnter={this.setPosition}
-					></canvas>
-				</div>
-			</div>
-			<div className="row">
-				<div className="col text-center">
-					<button onClick={this.clearCanvas}>Clear</button>
-					<button onClick={this.submitData}>Submit</button>
-				</div>
-			</div>
-			<div className="row">
-			</div>
-		</div>
-    );
-  }
-	
+			{this.state.modal && <Modal pred={this.state.pred} toggleClose={this.toggleModal} />}
+		</React.Fragment>
+		);
+	}
 }
 		
