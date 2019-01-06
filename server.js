@@ -1,4 +1,5 @@
 const tf = require('@tensorflow/tfjs');
+const path = require("path");
 // CPU computation
 require('@tensorflow/tfjs-node');
 //const fs = require('file-system');
