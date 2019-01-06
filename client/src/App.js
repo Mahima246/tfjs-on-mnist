@@ -1,6 +1,6 @@
 import React from 'react';
 import Modal from './Modal'
-import {convertLabel,loadCanvas} from './TFHelpers'
+import {loadCanvas} from './TFHelpers'
 export default class App extends React.Component {
 	constructor(){
 		super();
@@ -37,9 +37,14 @@ export default class App extends React.Component {
 	draw = (e) => {
 		if (e.buttons !== 1) return;
 		this.state.canvas.beginPath();
+		// let canvas = {...this.state.canvas}
+		// canvas.lineWidth = 30;
+		// canvas.lineCap = "round";
+		// canvas.strokeStyle = "#ffffff";
 		this.state.canvas.lineWidth = 30;
 		this.state.canvas.lineCap = "round";
 		this.state.canvas.strokeStyle = '#ffffff';
+		//this.setState({canvas});
 		this.state.canvas.moveTo(this.state.c_x1, this.state.c_y1);
 		this.setPosition(e);
 		this.state.canvas.lineTo(this.state.c_x1, this.state.c_y1);
@@ -84,7 +89,7 @@ export default class App extends React.Component {
 					</div>
 				</div>
 				<div className="row">
-					<div className="col text-center">				
+					<div className="col">				
 						<canvas 
 							id="drawable"
 							width={280} height={280} 
@@ -96,12 +101,10 @@ export default class App extends React.Component {
 					</div>
 				</div>
 				<div className="row">
-					<div className="col text-center">
+					<div className="col">
 						<button onClick={this.clearCanvas}>Clear</button>
 						<button onClick={this.submitData}>Submit</button>
 					</div>
-				</div>
-				<div className="row">
 				</div>
 			</div>
 			{this.state.modal && <Modal pred={this.state.pred} toggleClose={this.toggleModal} />}

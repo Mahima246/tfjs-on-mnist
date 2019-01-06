@@ -1,23 +1,13 @@
-import * as tf from '@tensorflow/tfjs';
 
-//
-//	Converts a digit (range 0-9) to a binary array with digit marked. If it errors, caught by function which instantiates it
-//
-export function convertLabel(pos){
-	let raw = [0,0,0,0,0,0,0,0,0,0];
-	raw[pos] = 1;
-	return raw;
-}
-//
 //	Canvas Loading Function; takes data as flattened rgba array from canvas context and converts to single-pixel binary
 //
 export function loadCanvas(raw) {
 	// 1; Converts typed array to regular array -- courtesy https://stackoverflow.com/a/29862266/10571336
 	let data1 = Array.prototype.slice.call(raw);
 	// 2; Converts the image to single-value number per pixel (assumption: r,g,b,a are all EQ) -- courtesy https://stackoverflow.com/a/33483070/10571336
-	let data2 = data1.filter(function(val,i,Arr) { return i % 4 == 0; })
+	let data2 = data1.filter(function(val,i,Arr) { return i % 4 === 0; })
 	// 3; Converts 256/0 to 1/0
-	let data3 = data2.map(x => x==0? x : 1);
+	let data3 = data2.map(x => x===0? x : 1);
 	// 4; Takes 10x10 chunks of the corresponding image, adds them up, then decides if compressed result is 1/0
 	let ret = [];	
 	let rows = [];
@@ -35,6 +25,5 @@ export function loadCanvas(raw) {
 	  chunks = chunks.map(x => x>=50? 1:0);
 	  ret = ret.concat(chunks);
 	}
-	
 	return ret;	
 }
