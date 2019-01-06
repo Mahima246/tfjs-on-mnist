@@ -1,12 +1,18 @@
 # Tensorflow Convolutional Neural Network Testing on User-Inputted Data
 (c) 2018 Syd Strzempko (stzuko.github.io)
 
+## Deployment
+
+Access the app at https://tfjs-mnist-predictor.herokuapp.com/
+
 ## Libraries Used
 
 * [Tensorflow JS](https://js.tensorflow.org/)
 * [Tensorflow for Nodejs](https://github.com/tensorflow/tfjs-node)
 * [MNIST images](cs.nyu.edu/~roweis/data.html)
-* []
+* [Create-react-app](https://github.com/facebook/create-react-app
+* [Canvas](https://www.npmjs.com/package/canvas)
+* [React-chartkick](https://github.com/ankane/react-chartkick)
 
 ## Description
 
@@ -29,5 +35,3 @@
 * [Express with Create-React-App tutorial](https://medium.freecodecamp.org/how-to-make-create-react-app-work-with-a-node-backend-api-7c5c48acb1b0)
 
 * [Drawable Canvas](https://enlight.nyc/projects/web-paint/)
-
-
