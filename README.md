@@ -1,4 +1,4 @@
-# Tensorflow Convolutional Neural Network Testing on User-Inputted Data
+# Tensorflow Convolutional Neural Network Testing on User MNIST Digits
 (c) 2018 Syd Strzempko (stzuko.github.io)
 
 ## Deployment
@@ -10,7 +10,7 @@ Access the app at https://tfjs-mnist-predictor.herokuapp.com/
 * [Tensorflow JS](https://js.tensorflow.org/)
 * [Tensorflow for Nodejs](https://github.com/tensorflow/tfjs-node)
 * [MNIST images](cs.nyu.edu/~roweis/data.html)
-* [Create-react-app](https://github.com/facebook/create-react-app
+* [Create-react-app](https://github.com/facebook/create-react-app)
 * [Canvas](https://www.npmjs.com/package/canvas)
 * [React-chartkick](https://github.com/ankane/react-chartkick)
 
